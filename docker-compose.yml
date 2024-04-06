@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  api1: &api
+    build: .
+    container_name: api_1
+    hostname: api1
+    depends_on:
+      - redis
+    networks:
+      - api_net
+    volumes:
+      - ./data:/data
+
+  api2:
+    <<: *api
+    container_name: api_2
+    hostname: api2
+    depends_on:
+      - api1
+
+  api3:
+    <<: *api
+    container_name: api_3
+    hostname: api3
+    depends_on:
+      - api1
+
+  api4:
+    <<: *api
+    container_name: api_4
+    hostname: api4
+    depends_on:
+      - api1
+
+  api5:
+    <<: *api
+    container_name: api_5
+    hostname: api5
+    depends_on:
+      - api1
+
+  nginx:
+    image: nginx:latest
+    container_name: proxy
+    hostname: proxy
+    networks:
+      - api_net
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 9999:9999
+    depends_on:
+      - api1
+      - api2
+      - api3
+      - api4
+      - api5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    networks:
+      - api_net
+    volumes:
+      - ./data:/data
+
+networks:
+  api_net:
